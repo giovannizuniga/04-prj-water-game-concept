@@ -1,196 +1,331 @@
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-const scoreDiv = document.getElementById('score');
-const feedbackDiv = document.getElementById('feedback');
-const restartBtn = document.getElementById('restartBtn');
+// Game Constants
+const GRID_SIZE = 20;
+const GAME_SPEED = 150;
 
-// Game settings
-const truckSize = 20;
-const canSize = 16;
-const dropSize = 14;
-const pollutantSize = 14;
-const speed = 20;
-let direction = 'right';
+// Game State Variables
+let snake = [{ x: 10, y: 10 }];
+let direction = { x: 1, y: 0 };
+let gameItems = [];
 let score = 0;
-let feedback = '';
 let gameOver = false;
+let gameStarted = false;
+let jerryCanCount = 0;
+let feedbackMessage = '';
+let peopleServed = 0;
+let gameInterval = null;
+let feedbackTimeout = null;
 
-// Truck and jerry cans
-let truck = { x: 100, y: 200 };
-let cans = [];
+// DOM Elements
+const gameCanvas = document.getElementById('gameCanvas');
+const startScreen = document.getElementById('startScreen');
+const gameOverScreen = document.getElementById('gameOverScreen');
+const playingInstructions = document.getElementById('playingInstructions');
+const startButton = document.getElementById('startButton');
+const restartButton = document.getElementById('restartButton');
+const milestoneContainer = document.getElementById('milestoneContainer');
+const milestoneBadge = document.getElementById('milestoneBadge');
+const feedbackContainer = document.getElementById('feedbackContainer');
+const feedbackMessageElement = document.getElementById('feedbackMessage');
 
-// Water drops and pollutants
-let drops = [];
-let pollutants = [];
+// Stat elements
+const scoreElement = document.getElementById('score');
+const jerryCanCountElement = document.getElementById('jerryCanCount');
+const peopleServedElement = document.getElementById('peopleServed');
+const trailLengthElement = document.getElementById('trailLength');
+const finalJerryCansElement = document.getElementById('finalJerryCans');
+const finalPeopleServedElement = document.getElementById('finalPeopleServed');
 
-function randomPos(size) {
-  return {
-    x: Math.floor(Math.random() * (canvas.width - size) / speed) * speed,
-    y: Math.floor(Math.random() * (canvas.height - size) / speed) * speed
-  };
+// Generate random position for game items
+function generateRandomPosition() {
+    return {
+        x: Math.floor(Math.random() * GRID_SIZE),
+        y: Math.floor(Math.random() * GRID_SIZE)
+    };
 }
 
-function spawnDrop() {
-  drops.push({ ...randomPos(dropSize) });
-}
-function spawnPollutant() {
-  pollutants.push({ ...randomPos(pollutantSize) });
-}
-
-function resetGame() {
-  truck = { x: 100, y: 200 };
-  cans = [];
-  drops = [];
-  pollutants = [];
-  direction = 'right';
-  score = 0;
-  feedback = '';
-  gameOver = false;
-  scoreDiv.textContent = 'Score: 0';
-  feedbackDiv.textContent = '';
-  spawnDrop();
-  spawnPollutant();
+// Generate game items (water drops and pollution)
+function generateGameItems() {
+    const items = [];
+    
+    // Add water drops (more frequent)
+    for (let i = 0; i < 3; i++) {
+        const pos = generateRandomPosition();
+        items.push({ ...pos, type: 'water' });
+    }
+    
+    // Add pollution (less frequent)
+    if (Math.random() > 0.7) {
+        const pos = generateRandomPosition();
+        items.push({ ...pos, type: 'pollution' });
+    }
+    
+    gameItems = items;
 }
 
-function drawTruck() {
-  ctx.fillStyle = '#1976d2';
-  ctx.fillRect(truck.x, truck.y, truckSize, truckSize);
-  // Draw truck wheels
-  ctx.fillStyle = '#333';
-  ctx.fillRect(truck.x, truck.y + truckSize - 4, 6, 4);
-  ctx.fillRect(truck.x + truckSize - 6, truck.y + truckSize - 4, 6, 4);
+// Initialize game
+function initializeGame() {
+    snake = [{ x: 10, y: 10 }];
+    direction = { x: 1, y: 0 };
+    score = 0;
+    jerryCanCount = 0;
+    peopleServed = 0;
+    gameOver = false;
+    feedbackMessage = '';
+    
+    generateGameItems();
+    updateStats();
+    updateDisplay();
+    hideFeedback();
+    hideMilestone();
 }
 
-function drawCans() {
-  ctx.fillStyle = '#ffd600';
-  cans.forEach(can => {
-    ctx.fillRect(can.x, can.y, canSize, canSize);
-    // Handle
-    ctx.fillStyle = '#333';
-    ctx.fillRect(can.x + 2, can.y + 2, 4, 4);
-    ctx.fillStyle = '#ffd600';
-  });
+// Update statistics display
+function updateStats() {
+    scoreElement.textContent = score;
+    jerryCanCountElement.textContent = jerryCanCount;
+    peopleServedElement.textContent = peopleServed;
+    trailLengthElement.textContent = snake.length;
 }
 
-function drawDrops() {
-  ctx.fillStyle = '#00bcd4';
-  drops.forEach(drop => {
-    ctx.beginPath();
-    ctx.arc(drop.x + dropSize/2, drop.y + dropSize/2, dropSize/2, 0, Math.PI * 2);
-    ctx.fill();
-  });
+// Show feedback message
+function showFeedback(message) {
+    feedbackMessage = message;
+    feedbackMessageElement.textContent = message;
+    feedbackContainer.style.display = 'block';
+    
+    // Clear previous timeout
+    if (feedbackTimeout) {
+        clearTimeout(feedbackTimeout);
+    }
+    
+    // Hide after 2 seconds
+    feedbackTimeout = setTimeout(() => {
+        hideFeedback();
+    }, 2000);
 }
 
-function drawPollutants() {
-  ctx.fillStyle = '#757575';
-  pollutants.forEach(pollutant => {
-    ctx.beginPath();
-    ctx.arc(pollutant.x + pollutantSize/2, pollutant.y + pollutantSize/2, pollutantSize/2, 0, Math.PI * 2);
-    ctx.fill();
-  });
+// Hide feedback message
+function hideFeedback() {
+    feedbackContainer.style.display = 'none';
+    feedbackMessage = '';
 }
 
-function moveTruck() {
-  if (gameOver) return;
-  let prev = { x: truck.x, y: truck.y };
-  switch (direction) {
-    case 'right': truck.x += speed; break;
-    case 'left': truck.x -= speed; break;
-    case 'up': truck.y -= speed; break;
-    case 'down': truck.y += speed; break;
-  }
-  // Move cans
-  for (let i = cans.length - 1; i > 0; i--) {
-    cans[i].x = cans[i-1].x;
-    cans[i].y = cans[i-1].y;
-  }
-  if (cans.length) {
-    cans[0].x = prev.x;
-    cans[0].y = prev.y;
-  }
+// Get milestone message
+function getMilestoneMessage() {
+    if (jerryCanCount >= 50) return "🏆 Water Hero! 50+ jerry cans collected!";
+    if (jerryCanCount >= 25) return "⭐ Water Champion! 25+ jerry cans!";
+    if (jerryCanCount >= 10) return "💧 Making a difference! 10+ jerry cans!";
+    if (jerryCanCount >= 5) return "🚛 Good start! 5+ jerry cans collected!";
+    return "";
 }
 
-function checkCollisions() {
-  // Wall collision
-  if (
-    truck.x < 0 || truck.x + truckSize > canvas.width ||
-    truck.y < 0 || truck.y + truckSize > canvas.height
-  ) {
-    feedback = 'You hit the wall!';
+// Show milestone
+function showMilestone() {
+    const message = getMilestoneMessage();
+    if (message) {
+        milestoneBadge.textContent = message;
+        milestoneContainer.style.display = 'block';
+    } else {
+        hideMilestone();
+    }
+}
+
+// Hide milestone
+function hideMilestone() {
+    milestoneContainer.style.display = 'none';
+}
+
+// Handle keyboard input
+function handleKeyPress(event) {
+    if (!gameStarted || gameOver) return;
+
+    switch (event.key) {
+        case 'ArrowUp':
+            if (direction.y !== 1) {
+                direction = { x: 0, y: -1 };
+            }
+            break;
+        case 'ArrowDown':
+            if (direction.y !== -1) {
+                direction = { x: 0, y: 1 };
+            }
+            break;
+        case 'ArrowLeft':
+            if (direction.x !== 1) {
+                direction = { x: -1, y: 0 };
+            }
+            break;
+        case 'ArrowRight':
+            if (direction.x !== -1) {
+                direction = { x: 1, y: 0 };
+            }
+            break;
+    }
+    
+    // Prevent default behavior for arrow keys
+    if (event.key.startsWith('Arrow')) {
+        event.preventDefault();
+    }
+}
+
+// Move snake
+function moveSnake() {
+    if (!gameStarted || gameOver) return;
+
+    const newSnake = [...snake];
+    const head = { ...newSnake[0] };
+    
+    head.x += direction.x;
+    head.y += direction.y;
+
+    // Check wall collision
+    if (head.x < 0 || head.x >= GRID_SIZE || head.y < 0 || head.y >= GRID_SIZE) {
+        endGame('Truck crashed into a wall! Game Over.');
+        return;
+    }
+
+    // Check self collision
+    if (newSnake.some(segment => segment.x === head.x && segment.y === head.y)) {
+        endGame('Truck crashed into its trail! Game Over.');
+        return;
+    }
+
+    newSnake.unshift(head);
+
+    // Check item collision
+    const hitItem = gameItems.find(item => item.x === head.x && item.y === head.y);
+    
+    if (hitItem) {
+        if (hitItem.type === 'water') {
+            // Collected water drop
+            score += 10;
+            jerryCanCount += 1;
+            peopleServed += 5; // Each jerry can serves ~5 people
+            showFeedback('Water collected! +10 points');
+            
+            // Generate new items after a short delay
+            setTimeout(() => generateGameItems(), 100);
+        } else if (hitItem.type === 'pollution') {
+            // Hit pollution
+            endGame('Hit pollution! Clean water mission failed.');
+            return;
+        }
+        
+        // Remove the collected item
+        gameItems = gameItems.filter(item => !(item.x === head.x && item.y === head.y));
+    } else {
+        // Remove tail if no item collected
+        newSnake.pop();
+    }
+
+    snake = newSnake;
+    updateStats();
+    updateDisplay();
+    showMilestone();
+}
+
+// End game
+function endGame(message) {
     gameOver = true;
-    return;
-  }
-  // Self collision
-  for (let can of cans) {
-    if (truck.x === can.x && truck.y === can.y) {
-      feedback = 'You hit your own jerry cans!';
-      gameOver = true;
-      return;
+    gameStarted = false;
+    
+    if (gameInterval) {
+        clearInterval(gameInterval);
+        gameInterval = null;
     }
-  }
-  // Drop collision
-  for (let i = 0; i < drops.length; i++) {
-    let drop = drops[i];
-    if (
-      truck.x < drop.x + dropSize && truck.x + truckSize > drop.x &&
-      truck.y < drop.y + dropSize && truck.y + truckSize > drop.y
-    ) {
-      score++;
-      scoreDiv.textContent = 'Score: ' + score;
-      feedback = 'Great! You collected water.';
-      cans.push({ x: truck.x, y: truck.y });
-      drops.splice(i, 1);
-      spawnDrop();
-      if (score % 5 === 0) {
-        feedback = 'Milestone! ' + score + ' drops collected!';
-      }
-      break;
-    }
-  }
-  // Pollutant collision
-  for (let i = 0; i < pollutants.length; i++) {
-    let pollutant = pollutants[i];
-    if (
-      truck.x < pollutant.x + pollutantSize && truck.x + truckSize > pollutant.x &&
-      truck.y < pollutant.y + pollutantSize && truck.y + truckSize > pollutant.y
-    ) {
-      feedback = 'Oh no! You hit a pollutant.';
-      gameOver = true;
-      break;
-    }
-  }
+    
+    showFeedback(message);
+    showGameOverScreen();
 }
 
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  drawTruck();
-  drawCans();
-  drawDrops();
-  drawPollutants();
+// Update game display
+function updateDisplay() {
+    // Clear canvas
+    gameCanvas.innerHTML = '';
+    
+    // Create grid cells
+    for (let index = 0; index < GRID_SIZE * GRID_SIZE; index++) {
+        const x = index % GRID_SIZE;
+        const y = Math.floor(index / GRID_SIZE);
+        
+        const cell = document.createElement('div');
+        cell.className = 'grid-cell';
+        
+        // Check if this position contains snake
+        const isSnakeHead = snake[0]?.x === x && snake[0]?.y === y;
+        const isSnakeBody = snake.slice(1).some(segment => segment.x === x && segment.y === y);
+        
+        // Check if this position contains game items
+        const gameItem = gameItems.find(item => item.x === x && item.y === y);
+        
+        // Apply styles and content
+        if (isSnakeHead) {
+            cell.classList.add('snake-head');
+            cell.textContent = '🚛';
+        } else if (isSnakeBody) {
+            cell.classList.add('snake-body');
+            cell.textContent = '🛢️';
+        } else if (gameItem?.type === 'water') {
+            cell.classList.add('water-drop');
+            cell.textContent = '💧';
+        } else if (gameItem?.type === 'pollution') {
+            cell.classList.add('pollution');
+            cell.textContent = '☠️';
+        }
+        
+        gameCanvas.appendChild(cell);
+    }
 }
 
-function gameLoop() {
-  if (!gameOver) {
-    moveTruck();
-    checkCollisions();
-    draw();
-    feedbackDiv.textContent = feedback;
-  } else {
-    feedbackDiv.textContent = feedback + ' Game Over!';
-  }
+// Start game
+function startGame() {
+    gameStarted = true;
+    initializeGame();
+    showPlayingScreen();
+    
+    // Start game loop
+    gameInterval = setInterval(moveSnake, GAME_SPEED);
 }
 
-// Controls
-window.addEventListener('keydown', e => {
-  switch (e.key) {
-    case 'ArrowUp': if (direction !== 'down') direction = 'up'; break;
-    case 'ArrowDown': if (direction !== 'up') direction = 'down'; break;
-    case 'ArrowLeft': if (direction !== 'right') direction = 'left'; break;
-    case 'ArrowRight': if (direction !== 'left') direction = 'right'; break;
-  }
+// Restart game
+function restartGame() {
+    initializeGame();
+    startGame();
+}
+
+// Show start screen
+function showStartScreen() {
+    startScreen.style.display = 'block';
+    gameOverScreen.style.display = 'none';
+    playingInstructions.style.display = 'none';
+}
+
+// Show playing screen
+function showPlayingScreen() {
+    startScreen.style.display = 'none';
+    gameOverScreen.style.display = 'none';
+    playingInstructions.style.display = 'block';
+}
+
+// Show game over screen
+function showGameOverScreen() {
+    startScreen.style.display = 'none';
+    gameOverScreen.style.display = 'block';
+    playingInstructions.style.display = 'none';
+    
+    // Update final stats
+    finalJerryCansElement.textContent = jerryCanCount;
+    finalPeopleServedElement.textContent = peopleServed;
+}
+
+// Event Listeners
+document.addEventListener('keydown', handleKeyPress);
+startButton.addEventListener('click', startGame);
+restartButton.addEventListener('click', restartGame);
+
+// Initialize the game on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeGame();
+    updateDisplay();
+    showStartScreen();
 });
-
-restartBtn.addEventListener('click', resetGame);
-
-resetGame();
-setInterval(gameLoop, 120);
