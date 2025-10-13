@@ -14,6 +14,7 @@ let feedbackMessage = '';
 let peopleServed = 0;
 let gameInterval = null;
 let feedbackTimeout = null;
+let pollutantCount = 0;
 
 // DOM Elements
 const gameCanvas = document.getElementById('gameCanvas');
@@ -34,6 +35,8 @@ const peopleServedElement = document.getElementById('peopleServed');
 const trailLengthElement = document.getElementById('trailLength');
 const finalJerryCansElement = document.getElementById('finalJerryCans');
 const finalPeopleServedElement = document.getElementById('finalPeopleServed');
+// Add pollutant counter element
+let pollutantCountElement = document.getElementById('pollutantCount');
 
 // Generate random position for game items
 function generateRandomPosition() {
@@ -71,7 +74,7 @@ function initializeGame() {
     peopleServed = 0;
     gameOver = false;
     feedbackMessage = '';
-    
+    pollutantCount = 0;
     generateGameItems();
     updateStats();
     updateDisplay();
@@ -85,6 +88,9 @@ function updateStats() {
     jerryCanCountElement.textContent = jerryCanCount;
     peopleServedElement.textContent = peopleServed;
     trailLengthElement.textContent = snake.length;
+    if (pollutantCountElement) {
+        pollutantCountElement.textContent = pollutantCount;
+    }
 }
 
 // Show feedback message
@@ -206,9 +212,12 @@ function moveSnake() {
             // Generate new items after a short delay
             setTimeout(() => generateGameItems(), 100);
         } else if (hitItem.type === 'pollution') {
-            // Hit pollution
-            endGame('Hit pollution! Clean water mission failed.');
-            return;
+                // Hit pollution: decrease score and increment counter
+                score = Math.max(0, score - 5);
+                pollutantCount += 1;
+                showFeedback('Pollution hit! -5 points');
+                // Remove the pollutant and generate new items
+                setTimeout(() => generateGameItems(), 100);
         }
         
         // Remove the collected item
@@ -325,6 +334,17 @@ restartButton.addEventListener('click', restartGame);
 
 // Initialize the game on page load
 document.addEventListener('DOMContentLoaded', function() {
+    // Add pollutant counter to stats grid if not present
+    if (!pollutantCountElement) {
+        const statsGrid = document.querySelector('.stats-grid');
+        if (statsGrid) {
+            const statCard = document.createElement('div');
+            statCard.className = 'stat-card';
+            statCard.innerHTML = '<div class="stat-icon">☠️</div><div class="stat-label">Pollutants Hit</div><div class="stat-value" id="pollutantCount">0</div>';
+            statsGrid.appendChild(statCard);
+            pollutantCountElement = document.getElementById('pollutantCount');
+        }
+    }
     initializeGame();
     updateDisplay();
     showStartScreen();
