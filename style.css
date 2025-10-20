@@ -338,6 +338,25 @@ body {
     border-color: #f59e0b;
 }
 
+.mode-button {
+    background: white;
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    font-weight: 700;
+    min-width: 84px;
+}
+
+.mode-button.selected {
+    background: #ffd600; /* match jerry can yellow */
+    border-color: #f59e0b;
+    color: #1f2937;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+
+.mode-button:hover { transform: translateY(-1px); }
+
 .sound-controls,
 .tuning-controls {
     display: flex;

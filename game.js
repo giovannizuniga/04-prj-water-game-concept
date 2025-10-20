@@ -348,9 +348,9 @@ function updateDisplay() {
 
 // Start game
 function startGame() {
-    // Read selected mode from the start screen radio buttons
-    const modeInput = document.querySelector('input[name="mode"]:checked');
-    selectedMode = modeInput ? modeInput.value : 'easy';
+    // Read selected mode from the mode buttons
+    const modeBtn = document.querySelector('.mode-button.selected');
+    selectedMode = modeBtn ? modeBtn.getAttribute('data-mode') : 'easy';
 
     // Apply mode settings defaults
     if (selectedMode === 'easy') {
@@ -507,19 +507,21 @@ function openTutorial() {
 }
 
 // Highlight selected mode label on the start screen
-function updateModeLabelHighlight() {
-    const labels = document.querySelectorAll('.mode-select label');
-    labels.forEach(label => label.classList.remove('selected'));
-    const checked = document.querySelector('.mode-select input[type="radio"]:checked');
-    if (checked) {
-        const parent = checked.parentElement;
-        if (parent && parent.tagName === 'LABEL') parent.classList.add('selected');
-    }
+// Mode button highlight handling
+function updateModeButtonHighlight() {
+    const btns = document.querySelectorAll('.mode-button');
+    btns.forEach(b => b.classList.remove('selected'));
+    const sel = document.querySelector('.mode-button[data-mode="' + selectedMode + '"]');
+    if (sel) sel.classList.add('selected');
 }
 
-document.querySelectorAll('.mode-select input[name="mode"]').forEach(r => {
-    r.addEventListener('change', updateModeLabelHighlight);
+document.querySelectorAll('.mode-button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const m = btn.getAttribute('data-mode');
+        if (m) selectedMode = m;
+        updateModeButtonHighlight();
+    });
 });
 
 // run once to set initial highlight
-updateModeLabelHighlight();
+updateModeButtonHighlight();
