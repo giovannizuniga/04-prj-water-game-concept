@@ -12,6 +12,13 @@ body {
     padding: 1rem;
 }
 
+.with-bg {
+    background-image: url('assets/ai-background.svg');
+    background-size: cover;
+    background-position: center top;
+    background-attachment: fixed;
+}
+
 /* Main Container */
 .game-container {
     min-height: 100vh;
@@ -387,6 +394,31 @@ body {
 }
 
 .mode-button:hover { transform: translateY(-1px); }
+
+.mode-button { display: inline-flex; gap: 0.5rem; align-items: center; padding: 0.6rem 0.9rem; }
+.mode-emoji { font-size: 1.1rem; }
+
+.mode-icon { width: 22px; height: 22px; display: inline-block; }
+
+/* Parallax container for background subtle movement */
+.with-bg::before {
+    content: '';
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255,255,255,0.02);
+    pointer-events: none;
+    transform: translateZ(0);
+}
+
+/* Slight glass effect behind main wrapper when background present */
+.game-wrapper {
+    background: rgba(255,255,255,0.9);
+    padding: 1rem;
+    border-radius: 0.75rem;
+}
 
 .sound-controls,
 .tuning-controls {

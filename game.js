@@ -529,6 +529,31 @@ document.querySelectorAll('.mode-button').forEach(btn => {
 // run once to set initial highlight
 updateModeButtonHighlight();
 
+// Subtle parallax effect: track mouse and shift background position slightly
+let parallaxX = 0, parallaxY = 0;
+let targetX = 0, targetY = 0;
+const parallaxIntensity = 10; // pixels max
+
+function onParallaxMove(e) {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    const nx = (e.clientX / w) - 0.5; // -0.5 .. 0.5
+    const ny = (e.clientY / h) - 0.5;
+    targetX = nx * parallaxIntensity * -1; // invert for subtle shift
+    targetY = ny * parallaxIntensity * -0.6;
+}
+
+function parallaxTick() {
+    // smooth towards target
+    parallaxX += (targetX - parallaxX) * 0.08;
+    parallaxY += (targetY - parallaxY) * 0.08;
+    document.body.style.backgroundPosition = `calc(50% + ${parallaxX}px) calc(0% + ${parallaxY}px)`;
+    requestAnimationFrame(parallaxTick);
+}
+
+window.addEventListener('mousemove', onParallaxMove);
+requestAnimationFrame(parallaxTick);
+
 // Apply default values for a given mode (penalty, bias, speed)
 function applyModeDefaults(mode) {
     if (mode === 'easy') {

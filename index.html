@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="with-bg">
     <div class="game-container">
         <div class="game-wrapper">
             <!-- Header -->
@@ -68,9 +68,9 @@
                 <!-- Start Screen -->
                 <div class="start-screen" id="startScreen">
                     <div class="mode-select">
-                        <button class="mode-button selected" data-mode="easy" id="modeEasy" title="Easy: fewer pollutants, small penalty">Easy</button>
-                        <button class="mode-button" data-mode="medium" id="modeMedium" title="Medium: more pollutants, larger penalty">Medium</button>
-                        <button class="mode-button" data-mode="hard" id="modeHard" title="Hard: medium rules + faster truck">Hard</button>
+                        <button class="mode-button selected" data-mode="easy" id="modeEasy" title="Easy: fewer pollutants, small penalty"><img class="mode-icon" src="assets/icon-easy.svg" alt="easy icon"><span>Easy</span></button>
+                        <button class="mode-button" data-mode="medium" id="modeMedium" title="Medium: more pollutants, larger penalty"><img class="mode-icon" src="assets/icon-medium.svg" alt="medium icon"><span>Medium</span></button>
+                        <button class="mode-button" data-mode="hard" id="modeHard" title="Hard: medium rules + faster truck"><img class="mode-icon" src="assets/icon-hard.svg" alt="hard icon"><span>Hard</span></button>
                     </div>
                         <div class="sound-controls">
                             <label><input type="checkbox" id="soundToggle" checked> Sound</label>
