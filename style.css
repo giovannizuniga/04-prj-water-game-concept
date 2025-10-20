@@ -329,14 +329,7 @@ body {
     font-weight: 600;
 }
 
-.mode-select input[type="radio"] {
-    margin-right: 0.5rem;
-}
-
-.mode-select label.selected {
-    background: #fef3c7; /* yellow tint */
-    border-color: #f59e0b;
-}
+/* mode buttons use .mode-button.selected now */
 
 .mode-button {
     background: white;
