@@ -1,6 +1,11 @@
 // Game Constants
 const GRID_SIZE = 20;
-const GAME_SPEED = 150;
+const BASE_GAME_SPEED = 150; // milliseconds per tick (lower = faster)
+
+// Mode-modifiable runtime values
+let currentGameSpeed = BASE_GAME_SPEED;
+let pollutantPenalty = 5;
+let selectedMode = 'easy';
 
 // Game State Variables
 let snake = [{ x: 10, y: 10 }];
@@ -27,6 +32,13 @@ const milestoneContainer = document.getElementById('milestoneContainer');
 const milestoneBadge = document.getElementById('milestoneBadge');
 const feedbackContainer = document.getElementById('feedbackContainer');
 const feedbackMessageElement = document.getElementById('feedbackMessage');
+// New controls
+const soundToggle = document.getElementById('soundToggle');
+const volumeControl = document.getElementById('volumeControl');
+const penaltySlider = document.getElementById('penaltySlider');
+const spawnSlider = document.getElementById('spawnSlider');
+const tutorialModal = document.getElementById('tutorialModal');
+const closeTutorial = document.getElementById('closeTutorial');
 
 // Stat elements
 const scoreElement = document.getElementById('score');
@@ -35,6 +47,15 @@ const peopleServedElement = document.getElementById('peopleServed');
 const trailLengthElement = document.getElementById('trailLength');
 const finalJerryCansElement = document.getElementById('finalJerryCans');
 const finalPeopleServedElement = document.getElementById('finalPeopleServed');
+const highScoreElement = document.getElementById('highScore');
+// Share modal elements
+const shareModal = document.getElementById('shareModal');
+const shareScoreElement = document.getElementById('shareScore');
+const shareTextElement = document.getElementById('shareText');
+const copyShare = document.getElementById('copyShare');
+const openLink = document.getElementById('openLink');
+const closeShare = document.getElementById('closeShare');
+const shareButton = document.getElementById('shareButton');
 // Add pollutant counter element
 let pollutantCountElement = document.getElementById('pollutantCount');
 
@@ -46,20 +67,39 @@ function generateRandomPosition() {
     };
 }
 
+// Ensure generated position is not on the snake
+function generateSafePosition() {
+    let pos;
+    let attempts = 0;
+    do {
+        pos = generateRandomPosition();
+        attempts++;
+        // safety fallback after many attempts
+        if (attempts > 50) break;
+    } while (snake.some(segment => segment.x === pos.x && segment.y === pos.y));
+    return pos;
+}
+
 // Generate game items (water drops and pollution)
 function generateGameItems() {
     const items = [];
     
     // Add water drops (more frequent)
     for (let i = 0; i < 3; i++) {
-        const pos = generateRandomPosition();
+        const pos = generateSafePosition();
         items.push({ ...pos, type: 'water' });
     }
     
-    // Add pollution (less frequent)
-    if (Math.random() > 0.7) {
-        const pos = generateRandomPosition();
-        items.push({ ...pos, type: 'pollution' });
+    // Add pollution: easy = 1 attempt, medium/hard = 2 attempts (higher expected pollutants)
+    const pollutionAttempts = (selectedMode === 'medium' || selectedMode === 'hard') ? 2 : 1;
+    for (let i = 0; i < pollutionAttempts; i++) {
+        // Determine bias threshold: default or user override
+        const defaultBias = (selectedMode === 'easy') ? 0.7 : 0.5;
+        const bias = (typeof window.USER_SPAWN_BIAS === 'number') ? window.USER_SPAWN_BIAS : defaultBias;
+        if (Math.random() > bias) {
+            const pos = generateSafePosition();
+            items.push({ ...pos, type: 'pollution' });
+        }
     }
     
     gameItems = items;
@@ -108,6 +148,24 @@ function showFeedback(message) {
     feedbackTimeout = setTimeout(() => {
         hideFeedback();
     }, 2000);
+}
+
+// Simple audio feedback using WebAudio API for collect/hit
+const audioCtx = (typeof AudioContext !== 'undefined') ? new AudioContext() : null;
+function beep(frequency = 440, duration = 0.08, type = 'sine', gain = 0.05) {
+    if (!audioCtx) return;
+    if (soundToggle && !soundToggle.checked) return;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.value = frequency;
+    // respect volume control slider
+    const vol = (volumeControl && volumeControl.value) ? parseFloat(volumeControl.value) : gain;
+    g.gain.value = vol;
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.start();
+    setTimeout(() => { o.stop(); }, duration * 1000);
 }
 
 // Hide feedback message
@@ -208,14 +266,16 @@ function moveSnake() {
             jerryCanCount += 1;
             peopleServed += 5; // Each jerry can serves ~5 people
             showFeedback('Water collected! +10 points');
+            beep(880, 0.06, 'triangle', 0.06);
             
             // Generate new items after a short delay
             setTimeout(() => generateGameItems(), 100);
         } else if (hitItem.type === 'pollution') {
-                // Hit pollution: decrease score and increment counter
-                score = Math.max(0, score - 5);
+                // Hit pollution: decrease score by mode penalty and increment counter
+                score = Math.max(0, score - pollutantPenalty);
                 pollutantCount += 1;
-                showFeedback('Pollution hit! -5 points');
+                showFeedback(`Pollution hit! -${pollutantPenalty} points`);
+                beep(160, 0.12, 'sawtooth', 0.08);
                 // Remove the pollutant and generate new items
                 setTimeout(() => generateGameItems(), 100);
         }
@@ -288,12 +348,40 @@ function updateDisplay() {
 
 // Start game
 function startGame() {
+    // Read selected mode from the start screen radio buttons
+    const modeInput = document.querySelector('input[name="mode"]:checked');
+    selectedMode = modeInput ? modeInput.value : 'easy';
+
+    // Apply mode settings defaults
+    if (selectedMode === 'easy') {
+        pollutantPenalty = 5;
+        currentGameSpeed = BASE_GAME_SPEED;
+    } else if (selectedMode === 'medium') {
+        pollutantPenalty = 12;
+        currentGameSpeed = BASE_GAME_SPEED;
+    } else if (selectedMode === 'hard') {
+        pollutantPenalty = 12;
+        currentGameSpeed = Math.max(50, Math.floor(BASE_GAME_SPEED / 2)); // faster
+    }
+
+    // Override with manual tuning sliders if user adjusted before start
+    if (penaltySlider && penaltySlider.value) {
+        const manual = parseInt(penaltySlider.value, 10);
+        if (!Number.isNaN(manual)) pollutantPenalty = manual;
+    }
+    // spawnSlider controls the bias threshold used in generateGameItems (0-100 -> 0.0-1.0)
+    window.USER_SPAWN_BIAS = spawnSlider ? (parseInt(spawnSlider.value, 10) / 100) : 0.7;
+
     gameStarted = true;
     initializeGame();
     showPlayingScreen();
-    
-    // Start game loop
-    gameInterval = setInterval(moveSnake, GAME_SPEED);
+
+    // Start game loop with currentGameSpeed
+    if (gameInterval) {
+        clearInterval(gameInterval);
+        gameInterval = null;
+    }
+    gameInterval = setInterval(moveSnake, currentGameSpeed);
 }
 
 // Restart game
@@ -325,12 +413,68 @@ function showGameOverScreen() {
     // Update final stats
     finalJerryCansElement.textContent = jerryCanCount;
     finalPeopleServedElement.textContent = peopleServed;
+    // Update high score if needed
+    const prevHigh = parseInt(localStorage.getItem('waterHighScore') || '0', 10);
+    if (score > prevHigh) {
+        localStorage.setItem('waterHighScore', String(score));
+        if (highScoreElement) highScoreElement.textContent = score;
+    }
+    if (highScoreElement && !highScoreElement.textContent) {
+        highScoreElement.textContent = localStorage.getItem('waterHighScore') || '0';
+    }
+    // Prepare share text
+    if (shareScoreElement) shareScoreElement.textContent = score;
+    if (shareTextElement) {
+        shareTextElement.textContent = `I just scored ${score} points in Water Mission to support charity: water — help bring clean water! 👉 https://www.charitywater.org`;
+    }
+    // Show share modal button available on game over screen; clicking it will open modal
 }
 
 // Event Listeners
 document.addEventListener('keydown', handleKeyPress);
 startButton.addEventListener('click', startGame);
 restartButton.addEventListener('click', restartGame);
+// Share modal event wiring
+if (shareButton) {
+    shareButton.addEventListener('click', () => {
+        if (!shareModal) return;
+        shareModal.style.display = 'flex';
+        // allow paint then add class to trigger animation
+        requestAnimationFrame(() => shareModal.classList.add('show'));
+    });
+}
+if (closeShare) {
+    closeShare.addEventListener('click', () => {
+        if (!shareModal) return;
+        shareModal.classList.remove('show');
+        // wait for animation then hide
+        setTimeout(() => { if (shareModal) shareModal.style.display = 'none'; }, 220);
+    });
+}
+// Close modal when clicking on backdrop
+if (shareModal) {
+    shareModal.addEventListener('click', (e) => {
+        if (e.target === shareModal) {
+            shareModal.classList.remove('show');
+            setTimeout(() => { if (shareModal) shareModal.style.display = 'none'; }, 220);
+        }
+    });
+}
+if (openLink) {
+    openLink.addEventListener('click', () => {
+        window.open('https://www.charitywater.org', '_blank');
+    });
+}
+if (copyShare) {
+    copyShare.addEventListener('click', () => {
+        const text = shareTextElement ? shareTextElement.textContent : '';
+        if (navigator.clipboard && text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showFeedback('Share text copied to clipboard');
+            });
+        }
+    });
+}
 
 // Initialize the game on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -348,4 +492,34 @@ document.addEventListener('DOMContentLoaded', function() {
     initializeGame();
     updateDisplay();
     showStartScreen();
+    // Show tutorial modal once on first load
+    if (tutorialModal) tutorialModal.style.display = 'flex';
 });
+
+if (closeTutorial) {
+    closeTutorial.addEventListener('click', () => {
+        if (tutorialModal) tutorialModal.style.display = 'none';
+    });
+}
+
+function openTutorial() {
+    if (tutorialModal) tutorialModal.style.display = 'flex';
+}
+
+// Highlight selected mode label on the start screen
+function updateModeLabelHighlight() {
+    const labels = document.querySelectorAll('.mode-select label');
+    labels.forEach(label => label.classList.remove('selected'));
+    const checked = document.querySelector('.mode-select input[type="radio"]:checked');
+    if (checked) {
+        const parent = checked.parentElement;
+        if (parent && parent.tagName === 'LABEL') parent.classList.add('selected');
+    }
+}
+
+document.querySelectorAll('.mode-select input[name="mode"]').forEach(r => {
+    r.addEventListener('change', updateModeLabelHighlight);
+});
+
+// run once to set initial highlight
+updateModeLabelHighlight();

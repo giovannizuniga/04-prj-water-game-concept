@@ -37,6 +37,11 @@
                     <div class="stat-label">Trail Length</div>
                     <div class="stat-value" id="trailLength">1</div>
                 </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🥇</div>
+                    <div class="stat-label">High Score</div>
+                    <div class="stat-value" id="highScore">0</div>
+                </div>
             </div>
 
             <!-- Milestone Badge -->
@@ -60,9 +65,33 @@
             <div class="controls-section">
                 <!-- Start Screen -->
                 <div class="start-screen" id="startScreen">
+                    <div class="mode-select">
+                            <label title="Easy: fewer pollutants, small penalty"><input type="radio" name="mode" value="easy" checked> Easy</label>
+                            <label title="Medium: more pollutants, larger penalty"><input type="radio" name="mode" value="medium"> Medium</label>
+                            <label title="Hard: medium rules + faster truck"><input type="radio" name="mode" value="hard"> Hard</label>
+                    </div>
+                        <div class="sound-controls">
+                            <label><input type="checkbox" id="soundToggle" checked> Sound</label>
+                            <label>Volume <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.06"></label>
+                        </div>
+                        <div class="tuning-controls">
+                            <label>Pollutant Penalty (easy / medium/hard default) <input type="range" id="penaltySlider" min="1" max="20" value="12"></label>
+                            <label>Pollution Spawn Bias <input type="range" id="spawnSlider" min="0" max="100" value="70"></label>
+                        </div>
                     <button class="start-button" id="startButton">🚛 Start Water Mission</button>
                     <p class="instructions">Use arrow keys to control your truck. Collect 💧 water drops, avoid ☠️ pollution!</p>
                 </div>
+
+                    <!-- Tutorial Modal -->
+                    <div class="tutorial-modal" id="tutorialModal" style="display:none;">
+                        <div class="tutorial-content">
+                            <h3>Quick Tutorial</h3>
+                            <p>You're a water delivery truck. Use the arrow keys to collect water drops (💧). Each drop adds a yellow jerry can to your trail and earns points.</p>
+                            <p>Avoid pollutants (☠️). Hitting pollution lowers your score and increases the pollutant counter.</p>
+                            <p>Pick a difficulty mode at the start: Easy for relaxing play, Medium for more challenge, Hard for fast-paced skill play.</p>
+                            <button id="closeTutorial">Got it</button>
+                        </div>
+                    </div>
 
                 <!-- Game Over Screen -->
                 <div class="game-over-screen" id="gameOverScreen" style="display: none;">
@@ -71,7 +100,23 @@
                         <p>You collected <strong id="finalJerryCans">0</strong> jerry cans</p>
                         <p>Providing clean water to <strong id="finalPeopleServed">0</strong> people!</p>
                     </div>
-                    <button class="restart-button" id="restartButton">🔄 Try Another Mission</button>
+                    <div class="share-controls">
+                        <button class="share-button" id="shareButton">📣 Share your score</button>
+                        <button class="restart-button" id="restartButton">🔄 Try Another Mission</button>
+                    </div>
+                </div>
+
+                <!-- Share Modal -->
+                <div class="share-modal" id="shareModal" style="display:none;">
+                    <div class="share-content">
+                        <h3>Share your mission!</h3>
+                        <p id="shareText">I just scored <strong id="shareScore">0</strong> points in Water Mission to support charity: water — help bring clean water! 👉 https://www.charitywater.org</p>
+                        <div class="share-actions">
+                            <button id="copyShare">Copy Message</button>
+                            <button id="openLink">Open charity: water</button>
+                            <button id="closeShare">Close</button>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Playing Instructions -->
