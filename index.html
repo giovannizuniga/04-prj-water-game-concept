@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💧 Water Mission - Charity: Water Game</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -74,10 +76,6 @@
                             <label><input type="checkbox" id="soundToggle" checked> Sound</label>
                             <label>Volume <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.06"></label>
                         </div>
-                        <div class="tuning-controls">
-                            <label>Pollutant Penalty (easy / medium/hard default) <input type="range" id="penaltySlider" min="1" max="20" value="12"></label>
-                            <label>Pollution Spawn Bias <input type="range" id="spawnSlider" min="0" max="100" value="70"></label>
-                        </div>
                     <button class="start-button" id="startButton">🚛 Start Water Mission</button>
                     <p class="instructions">Use arrow keys to control your truck. Collect 💧 water drops, avoid ☠️ pollution!</p>
                 </div>
@@ -128,9 +126,16 @@
 
             <!-- About Section -->
             <div class="about-section">
-                <h4>About charity: water</h4>
-                <p>charity: water is a non-profit bringing clean and safe drinking water to people in developing countries. 
-                Every jerry can you collect in this game represents real impact - helping families access clean water for drinking, cooking, and sanitation.</p>
+                <div>
+                    <h4>About charity: water</h4>
+                    <p>charity: water is a non-profit bringing clean and safe drinking water to people in developing countries. Every jerry can you collect in this game represents impact — helping families access safe water for drinking, cooking, and sanitation.</p>
+                </div>
+                <div class="about-cta">
+                    <div class="about-figure">
+                        <img src="assets/jerry-can.svg" alt="jerry can">
+                    </div>
+                    <a href="https://www.charitywater.org" target="_blank" rel="noopener">Learn more / Donate</a>
+                </div>
             </div>
         </div>
     </div>

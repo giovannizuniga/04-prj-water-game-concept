@@ -6,6 +6,7 @@ const BASE_GAME_SPEED = 150; // milliseconds per tick (lower = faster)
 let currentGameSpeed = BASE_GAME_SPEED;
 let pollutantPenalty = 5;
 let selectedMode = 'easy';
+let modeBias = 0.7; // probability bias used for pollution spawning (higher = rarer)
 
 // Game State Variables
 let snake = [{ x: 10, y: 10 }];
@@ -35,8 +36,6 @@ const feedbackMessageElement = document.getElementById('feedbackMessage');
 // New controls
 const soundToggle = document.getElementById('soundToggle');
 const volumeControl = document.getElementById('volumeControl');
-const penaltySlider = document.getElementById('penaltySlider');
-const spawnSlider = document.getElementById('spawnSlider');
 const tutorialModal = document.getElementById('tutorialModal');
 const closeTutorial = document.getElementById('closeTutorial');
 
@@ -93,10 +92,8 @@ function generateGameItems() {
     // Add pollution: easy = 1 attempt, medium/hard = 2 attempts (higher expected pollutants)
     const pollutionAttempts = (selectedMode === 'medium' || selectedMode === 'hard') ? 2 : 1;
     for (let i = 0; i < pollutionAttempts; i++) {
-        // Determine bias threshold: default or user override
-        const defaultBias = (selectedMode === 'easy') ? 0.7 : 0.5;
-        const bias = (typeof window.USER_SPAWN_BIAS === 'number') ? window.USER_SPAWN_BIAS : defaultBias;
-        if (Math.random() > bias) {
+        // Use modeBias (set by mode buttons) to determine spawn chance
+        if (Math.random() > modeBias) {
             const pos = generateSafePosition();
             items.push({ ...pos, type: 'pollution' });
         }
@@ -365,12 +362,7 @@ function startGame() {
     }
 
     // Override with manual tuning sliders if user adjusted before start
-    if (penaltySlider && penaltySlider.value) {
-        const manual = parseInt(penaltySlider.value, 10);
-        if (!Number.isNaN(manual)) pollutantPenalty = manual;
-    }
-    // spawnSlider controls the bias threshold used in generateGameItems (0-100 -> 0.0-1.0)
-    window.USER_SPAWN_BIAS = spawnSlider ? (parseInt(spawnSlider.value, 10) / 100) : 0.7;
+    // Use mode defaults for penalty/spawn bias (no manual overrides)
 
     gameStarted = true;
     initializeGame();
@@ -386,8 +378,19 @@ function startGame() {
 
 // Restart game
 function restartGame() {
+    // Stop any running loop and reset running flags
+    if (gameInterval) {
+        clearInterval(gameInterval);
+        gameInterval = null;
+    }
+    gameOver = false;
+    gameStarted = false;
+    // Reset game state so stats show fresh values on the start screen
     initializeGame();
-    startGame();
+    updateDisplay();
+    updateStats();
+    // Show the start screen so the player can pick a difficulty and tune settings
+    showStartScreen();
 }
 
 // Show start screen
@@ -525,3 +528,31 @@ document.querySelectorAll('.mode-button').forEach(btn => {
 
 // run once to set initial highlight
 updateModeButtonHighlight();
+
+// Apply default values for a given mode (penalty, bias, speed)
+function applyModeDefaults(mode) {
+    if (mode === 'easy') {
+        pollutantPenalty = 5;
+        modeBias = 0.7; // rarer pollution
+        currentGameSpeed = BASE_GAME_SPEED;
+    } else if (mode === 'medium') {
+        pollutantPenalty = 12;
+        modeBias = 0.5; // more pollution
+        currentGameSpeed = BASE_GAME_SPEED;
+    } else if (mode === 'hard') {
+        pollutantPenalty = 12;
+        modeBias = 0.45; // even more
+        currentGameSpeed = Math.max(50, Math.floor(BASE_GAME_SPEED / 2));
+    }
+}
+
+// Initialize defaults for initial selected mode
+applyModeDefaults(selectedMode);
+
+// Update applyModeDefaults when a mode button is clicked
+document.querySelectorAll('.mode-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const m = btn.getAttribute('data-mode');
+        if (m) applyModeDefaults(m);
+    });
+});

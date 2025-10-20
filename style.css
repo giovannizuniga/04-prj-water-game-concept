@@ -6,7 +6,7 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     background: linear-gradient(to bottom, #e0f2fe, #bfdbfe);
     min-height: 100vh;
     padding: 1rem;
@@ -283,23 +283,61 @@ body {
 
 /* About Section */
 .about-section {
-    background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 0.5rem;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid #e6f4fb;
+    border-left: 6px solid #ffd600; /* jerry can accent */
+    border-radius: 0.75rem;
     padding: 1rem;
-    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    box-shadow: 0 6px 20px rgba(16, 24, 40, 0.06);
+    display: grid;
+    grid-template-columns: 1fr 160px;
+    gap: 1rem;
+    align-items: center;
 }
 
 .about-section h4 {
-    font-weight: 600;
+    font-weight: 700;
     margin-bottom: 0.5rem;
-    color: #374151;
+    color: #0f172a;
+    font-size: 1.125rem;
 }
 
 .about-section p {
-    font-size: 0.875rem;
-    color: #6b7280;
+    font-size: 0.95rem;
+    color: #475569;
     line-height: 1.5;
+}
+
+.about-cta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.about-cta a {
+    display: inline-block;
+    background: #2563eb; /* charity blue-ish */
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.about-figure {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+}
+
+.about-figure img {
+    max-width: 120px;
+    border-radius: 0.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
 }
 
 /* Responsive Design */
