@@ -511,13 +511,14 @@ body {
 }
 
 .tutorial-card {
-    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.95));
-    border-radius: 0.75rem;
-    padding: 0.75rem 0.9rem;
-    box-shadow: 0 8px 30px rgba(2,6,23,0.12);
-    width: min(480px, 90%);
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(249,251,255,0.96));
+    border-radius: 0.9rem;
+    padding: 1rem 1rem;
+    box-shadow: 0 12px 40px rgba(2,6,23,0.14);
+    width: min(520px, 92%);
     color: #0f172a;
-    border: 1px solid rgba(2,6,23,0.04);
+    border: 1px solid rgba(15,23,42,0.06);
+    backdrop-filter: blur(6px) saturate(1.03);
 }
 
 .tutorial-header { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }
@@ -526,9 +527,13 @@ body {
 
 .tutorial-steps { margin-top:0.6rem; display:flex; flex-direction:column; gap:0.45rem; }
 .step { display:flex; gap:0.6rem; align-items:flex-start; }
-.step-icon { width:40px; height:40px; border-radius:10px; background: #f0f9ff; display:flex; align-items:center; justify-content:center; font-size:1.15rem; box-shadow: 0 2px 6px rgba(2,6,23,0.06); }
-.step-text strong { display:block; font-size:0.97rem; }
-.muted { color:#64748b; font-size:0.85rem; margin-top:2px; }
+.step-icon { width:44px; height:44px; border-radius:12px; background: linear-gradient(180deg,#f0fbff,#e6f7ff); display:flex; align-items:center; justify-content:center; font-size:1.25rem; box-shadow: 0 4px 12px rgba(2,6,23,0.08); }
+.step-text strong { display:block; font-size:1rem; font-weight:700; }
+.muted { color:#55627a; font-size:0.88rem; margin-top:4px; }
+
+/* Center the tutorial card vertically and horizontally in the modal */
+.tutorial-modal { align-items: center; justify-content: center; }
+.tutorial-card { margin: 0 auto; }
 
 .tutorial-actions { display:flex; gap:0.5rem; justify-content:flex-end; margin-top:0.7rem; }
 .start-button.small { padding:0.45rem 0.75rem; font-size:0.95rem; }

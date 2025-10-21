@@ -519,8 +519,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-if (closeTutorial) {
-    closeTutorial.addEventListener('click', () => {
+// Remove old X-button behavior; instead wire the primary Got it button
+const closeTutorialPrimary = document.getElementById('closeTutorialPrimary');
+if (closeTutorialPrimary) {
+    closeTutorialPrimary.addEventListener('click', () => {
         if (tutorialModal) tutorialModal.style.display = 'none';
     });
 }
