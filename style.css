@@ -99,6 +99,28 @@ body {
 }
 .stats-bottom .stat-card { min-width: 140px; }
 
+/* Make bottom stat cards visually identical to the main stat cards */
+.stats-bottom .stat-card {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+.stats-bottom .stat-icon { font-size: 1.4rem; margin-bottom: 0.25rem; }
+.stats-bottom .stat-label { font-size: 0.9rem; color: #6b7280; margin-bottom: 0.25rem; }
+.stats-bottom .stat-value { font-weight: 700; font-size: 1.05rem; }
+
+@media (max-width: 480px) {
+    .stats-bottom { flex-direction: column; gap: 0.6rem; }
+    .stats-bottom .stat-card { width: 100%; min-width: unset; }
+}
+
 @media (min-width: 768px) {
     .stats-grid {
         grid-template-columns: repeat(4, 1fr);
@@ -170,6 +192,41 @@ body {
 /* Game Canvas */
 .game-canvas-container {
     margin-bottom: 1.5rem;
+}
+
+/* Mobile touch controls under the canvas */
+.touch-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+.touch-row { display:flex; gap:0.5rem; }
+.touch-button {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.08);
+    background: white;
+    box-shadow: 0 6px 18px rgba(2,6,23,0.06);
+    font-size: 1.15rem;
+    display:flex; align-items:center; justify-content:center;
+    cursor: pointer;
+    user-select: none;
+}
+.touch-button:active { transform: scale(0.96); }
+
+/* pressed visual state applied by JS for better feedback */
+.touch-button.pressed {
+    transform: scale(0.94);
+    box-shadow: 0 4px 10px rgba(2,6,23,0.06);
+    background: linear-gradient(180deg, #f8fafc, #eef7ff);
+}
+
+/* Hide touch controls on wide screens; show on small screens */
+@media (min-width: 640px) {
+    .touch-controls { display: none; }
 }
 
 .game-canvas {
@@ -527,6 +584,31 @@ body {
     color: #0f172a;
     border: 1px solid rgba(15,23,42,0.06);
     backdrop-filter: blur(6px) saturate(1.03);
+}
+
+/* subtle low-opacity tint to make tutorial visually distinct */
+.tutorial-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 0.9rem;
+    background: linear-gradient(90deg, rgba(6,95,212,0.04), rgba(34,197,94,0.03));
+    pointer-events: none;
+}
+
+/* hide the 'Show Tutorial' link while tutorial is visible */
+.muted-link { color: #475569; text-decoration: underline dotted; font-weight:600; font-size:0.95rem; }
+.muted-link:focus-visible { outline: 3px solid rgba(37,99,235,0.12); border-radius: 3px; }
+
+/* subtle hide animation for the show tutorial link */
+.muted-link { transition: opacity 180ms ease, transform 180ms ease; }
+.hide-show-tutorial {
+    opacity: 0;
+    transform: translateY(-6px);
+    pointer-events: none;
 }
 
 .tutorial-header { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }

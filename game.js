@@ -238,6 +238,13 @@ function handleKeyPress(event) {
     }
 }
 
+// Helper to set direction safely from buttons (prevents reversing into self)
+function setDirection(dx, dy) {
+    // prevent reversing directly
+    if (direction.x === -dx && direction.y === -dy) return;
+    direction = { x: dx, y: dy };
+}
+
 // Move snake
 function moveSnake() {
     if (!gameStarted || gameOver) return;
@@ -509,6 +516,12 @@ document.addEventListener('DOMContentLoaded', function() {
             openTutorial();
             // ensure modal is visible
             if (tutorialModal) tutorialModal.style.display = 'flex';
+            // hide the show link while the modal is open
+            showTutorialLink.classList.add('hide-show-tutorial');
+            showTutorialLink.setAttribute('aria-hidden', 'true');
+            // move focus into the dialog
+            const gotIt = document.getElementById('closeTutorialPrimary');
+            if (gotIt) gotIt.focus();
         });
     }
     // Wire the primary Got it button to close and persist the seen flag
@@ -517,20 +530,49 @@ document.addEventListener('DOMContentLoaded', function() {
         closePrimary.addEventListener('click', () => {
             if (tutorialModal) tutorialModal.style.display = 'none';
             localStorage.setItem('tutorialSeen', 'true');
+            const showLink = document.getElementById('showTutorialLink');
+            if (showLink) {
+                showLink.classList.remove('hide-show-tutorial');
+                showLink.setAttribute('aria-hidden', 'false');
+                // return focus to the show link for accessibility
+                showLink.focus();
+            }
         });
     }
+
+    // Touch control wiring for mobile
+    const btnUp = document.getElementById('btnUp');
+    const btnDown = document.getElementById('btnDown');
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight = document.getElementById('btnRight');
+    const bindBtn = (el, dx, dy) => {
+        if (!el) return;
+        const activate = (e) => { e.preventDefault(); setDirection(dx, dy);
+            // haptic feedback if available
+            if (navigator.vibrate) navigator.vibrate(18);
+            el.classList.add('pressed');
+            // remove pressed state shortly after
+            setTimeout(() => el.classList.remove('pressed'), 120);
+        };
+        el.addEventListener('pointerdown', activate);
+        el.addEventListener('touchstart', activate, { passive: false });
+        el.addEventListener('click', activate);
+        // ensure pressed state removed on pointer up/cancel
+        el.addEventListener('pointerup', () => el.classList.remove('pressed'));
+        el.addEventListener('pointercancel', () => el.classList.remove('pressed'));
+    };
+    bindBtn(btnUp, 0, -1);
+    bindBtn(btnDown, 0, 1);
+    bindBtn(btnLeft, -1, 0);
+    bindBtn(btnRight, 1, 0);
 });
 
-// Remove old X-button behavior; instead wire the primary Got it button
-const closeTutorialPrimary = document.getElementById('closeTutorialPrimary');
-if (closeTutorialPrimary) {
-    closeTutorialPrimary.addEventListener('click', () => {
-        if (tutorialModal) tutorialModal.style.display = 'none';
-    });
-}
+// (old X-button listener removed) - primary Got it is wired above
 
 function openTutorial() {
     if (tutorialModal) tutorialModal.style.display = 'flex';
+    const showLink = document.getElementById('showTutorialLink');
+    if (showLink) showLink.classList.add('hide-show-tutorial');
 }
 
 // Highlight selected mode label on the start screen
