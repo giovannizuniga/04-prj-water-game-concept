@@ -490,22 +490,16 @@ if (copyShare) {
 
 // Initialize the game on page load
 document.addEventListener('DOMContentLoaded', function() {
-    // Add pollutant counter to stats grid if not present
-    if (!pollutantCountElement) {
-        const statsGrid = document.querySelector('.stats-grid');
-        if (statsGrid) {
-            const statCard = document.createElement('div');
-            statCard.className = 'stat-card';
-            statCard.innerHTML = '<div class="stat-icon">☠️</div><div class="stat-label">Pollutants Hit</div><div class="stat-value" id="pollutantCount">0</div>';
-            statsGrid.appendChild(statCard);
-            pollutantCountElement = document.getElementById('pollutantCount');
-        }
-    }
+    // `pollutantCountElement` now comes from the static DOM
+    if (!pollutantCountElement) pollutantCountElement = document.getElementById('pollutantCount');
     initializeGame();
     updateDisplay();
     showStartScreen();
-    // Show tutorial modal once on first load
-    if (tutorialModal) tutorialModal.style.display = 'flex';
+    // Show tutorial modal once on first load (persisted)
+    const tutorialSeen = localStorage.getItem('tutorialSeen') === 'true';
+    if (!tutorialSeen) {
+        if (tutorialModal) tutorialModal.style.display = 'flex';
+    }
 
     // Wire up explicit show tutorial link
     const showTutorialLink = document.getElementById('showTutorialLink');
@@ -515,6 +509,14 @@ document.addEventListener('DOMContentLoaded', function() {
             openTutorial();
             // ensure modal is visible
             if (tutorialModal) tutorialModal.style.display = 'flex';
+        });
+    }
+    // Wire the primary Got it button to close and persist the seen flag
+    const closePrimary = document.getElementById('closeTutorialPrimary');
+    if (closePrimary) {
+        closePrimary.addEventListener('click', () => {
+            if (tutorialModal) tutorialModal.style.display = 'none';
+            localStorage.setItem('tutorialSeen', 'true');
         });
     }
 });
