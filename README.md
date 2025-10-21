@@ -6,10 +6,12 @@
 	- The player’s truck appears at the starting position.
 	- One water drop and one pollutant are placed randomly on the canvas.
 	- The score is set to zero, and the jerry can trail is empty.
+	- The player can choose game difficulty at the start screen (modes change the way points are tracked)
 
 2. Player Actions:
 	- The player uses arrow keys to move the truck up, down, left, or right.
 	- The truck moves in the chosen direction at a set speed.
+	- Directional buttons appear on smaller displays to allow for gameplay on mobile/tablets without keyboards
 	- The player can click the “Restart” button to reset the game.
 
 3. Game Logic:
@@ -23,6 +25,7 @@
 	- The score counter updates each time a water drop is collected.
 	- Feedback messages appear for collecting drops, hitting milestones, or encountering pollutants.
 	- Visual feedback includes the growing jerry can trail and changing score.
+	- Difficulties modes affect scoring and other mechanics of game. Medium makes increase pollutants spawns/point deductions. Hard mode increase truck speed
 
 5. Win or Lose Conditions:
 	- The game ends if the truck hits a wall, a pollutant, or its own trail.
