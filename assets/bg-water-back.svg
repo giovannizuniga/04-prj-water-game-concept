@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="gBack" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#e6f7ff"/>
+      <stop offset="100%" stop-color="#bfdefe"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#gBack)"/>
+  <!-- soft distant waves -->
+  <g fill="#cfeeff" opacity="0.55">
+    <path d="M0 520 C150 480 350 560 600 520 C850 480 1050 560 1200 520 L1200 800 L0 800 Z"/>
+    <path d="M0 600 C150 560 350 640 600 600 C850 560 1050 640 1200 600 L1200 800 L0 800 Z" opacity="0.6"/>
+  </g>
+</svg>

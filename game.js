@@ -165,6 +165,15 @@ function beep(frequency = 440, duration = 0.08, type = 'sine', gain = 0.05) {
     setTimeout(() => { o.stop(); }, duration * 1000);
 }
 
+// small select sound for UI interactions
+function selectBeep(mode) {
+    if (!audioCtx) return;
+    if (soundToggle && !soundToggle.checked) return;
+    // different pitches per mode
+    const freq = (mode === 'easy') ? 720 : (mode === 'medium') ? 540 : 440;
+    beep(freq, 0.06, 'sine', (volumeControl && volumeControl.value) ? parseFloat(volumeControl.value) : 0.06);
+}
+
 // Hide feedback message
 function hideFeedback() {
     feedbackContainer.style.display = 'none';
@@ -497,6 +506,17 @@ document.addEventListener('DOMContentLoaded', function() {
     showStartScreen();
     // Show tutorial modal once on first load
     if (tutorialModal) tutorialModal.style.display = 'flex';
+
+    // Wire up explicit show tutorial link
+    const showTutorialLink = document.getElementById('showTutorialLink');
+    if (showTutorialLink) {
+        showTutorialLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            openTutorial();
+            // ensure modal is visible
+            if (tutorialModal) tutorialModal.style.display = 'flex';
+        });
+    }
 });
 
 if (closeTutorial) {
@@ -523,6 +543,14 @@ document.querySelectorAll('.mode-button').forEach(btn => {
         const m = btn.getAttribute('data-mode');
         if (m) selectedMode = m;
         updateModeButtonHighlight();
+        // play select sound
+        selectBeep(selectedMode);
+        // add a short mode-specific pulse animation for tactile feedback
+        btn.classList.remove('pulse', 'pulse-easy', 'pulse-medium', 'pulse-hard');
+        // force reflow
+        void btn.offsetWidth;
+        const cls = (selectedMode === 'easy') ? 'pulse-easy' : (selectedMode === 'medium') ? 'pulse-medium' : 'pulse-hard';
+        btn.classList.add(cls);
     });
 });
 
@@ -533,6 +561,7 @@ updateModeButtonHighlight();
 let parallaxX = 0, parallaxY = 0;
 let targetX = 0, targetY = 0;
 const parallaxIntensity = 10; // pixels max
+let parallaxEnabled = true;
 
 function onParallaxMove(e) {
     const w = window.innerWidth;
@@ -545,14 +574,71 @@ function onParallaxMove(e) {
 
 function parallaxTick() {
     // smooth towards target
-    parallaxX += (targetX - parallaxX) * 0.08;
-    parallaxY += (targetY - parallaxY) * 0.08;
-    document.body.style.backgroundPosition = `calc(50% + ${parallaxX}px) calc(0% + ${parallaxY}px)`;
+    if (parallaxEnabled) {
+        parallaxX += (targetX - parallaxX) * 0.08;
+        parallaxY += (targetY - parallaxY) * 0.08;
+        document.body.style.backgroundPosition = `calc(50% + ${parallaxX}px) calc(0% + ${parallaxY}px)`;
+
+        // Apply transforms to layered background if present
+        const layers = document.querySelectorAll('.parallax-bg .parallax-layer');
+        if (layers && layers.length) {
+            layers.forEach(layer => {
+                const depth = parseFloat(layer.getAttribute('data-depth')) || 0.5;
+                const moveX = parallaxX * depth * 1.2; // scale per-layer
+                const moveY = parallaxY * depth;
+                layer.style.transform = `translate3d(calc(-50% + ${moveX}px), ${moveY}px, 0)`;
+            });
+        }
+    }
+
     requestAnimationFrame(parallaxTick);
 }
 
 window.addEventListener('mousemove', onParallaxMove);
+// touch support: map touch move to parallax
+window.addEventListener('touchmove', (e) => {
+    if (!e.touches || !e.touches[0]) return;
+    onParallaxMove(e.touches[0]);
+}, { passive: true });
 requestAnimationFrame(parallaxTick);
+
+// Parallax toggle element and persistence
+const parallaxToggle = document.getElementById('parallaxToggle');
+function loadParallaxPreference() {
+    // If user OS prefers reduced motion, default off
+    const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const stored = localStorage.getItem('parallaxEnabled');
+    if (stored !== null) {
+        parallaxEnabled = stored === 'true';
+    } else {
+        parallaxEnabled = !prefersReduced; // default true unless reduced motion
+    }
+    if (parallaxToggle) parallaxToggle.checked = parallaxEnabled;
+    applyParallaxState();
+}
+
+function applyParallaxState() {
+    const layers = document.querySelectorAll('.parallax-bg .parallax-layer');
+    if (!parallaxEnabled) {
+        // reset transforms to center and clear background position
+        document.body.style.backgroundPosition = '';
+        layers.forEach(layer => {
+            layer.style.transform = 'translate3d(-50%, 0px, 0)';
+        });
+    }
+    // If enabled we keep running; state is read in parallaxTick
+}
+
+if (parallaxToggle) {
+    parallaxToggle.addEventListener('change', () => {
+        parallaxEnabled = !!parallaxToggle.checked;
+        localStorage.setItem('parallaxEnabled', parallaxEnabled ? 'true' : 'false');
+        applyParallaxState();
+    });
+}
+
+// Load pref once on script load
+loadParallaxPreference();
 
 // Apply default values for a given mode (penalty, bias, speed)
 function applyModeDefaults(mode) {
@@ -580,4 +666,25 @@ document.querySelectorAll('.mode-button').forEach(btn => {
         const m = btn.getAttribute('data-mode');
         if (m) applyModeDefaults(m);
     });
+});
+
+// Keyboard shortcuts: E, M, H to select modes
+document.addEventListener('keydown', (e) => {
+    if (gameStarted) return; // only allow mode change on start screen
+    const key = e.key.toLowerCase();
+    if (key === 'e' || key === 'm' || key === 'h') {
+        let m = 'easy';
+        if (key === 'm') m = 'medium';
+        if (key === 'h') m = 'hard';
+        selectedMode = m;
+        applyModeDefaults(m);
+        updateModeButtonHighlight();
+        const btn = document.querySelector(`.mode-button[data-mode="${m}"]`);
+        if (btn) {
+            selectBeep(m);
+            btn.classList.remove('pulse-easy','pulse-medium','pulse-hard');
+            void btn.offsetWidth;
+            btn.classList.add((m === 'easy') ? 'pulse-easy' : (m === 'medium') ? 'pulse-medium' : 'pulse-hard');
+        }
+    }
 });

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="gFront" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#bfe9ff"/>
+      <stop offset="100%" stop-color="#7cc8ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="transparent"/>
+  <!-- foreground dynamic waves with highlights -->
+  <g fill="#7cc8ff" opacity="0.9">
+    <path d="M0 400 C120 360 300 420 540 380 C760 350 980 420 1200 380 L1200 800 L0 800 Z"/>
+    <path d="M0 440 C150 400 350 470 600 430 C820 400 1000 460 1200 430 L1200 800 L0 800 Z" opacity="0.85"/>
+  </g>
+  <!-- highlights -->
+  <g fill="#ffffff" opacity="0.12">
+    <path d="M40 420 C200 380 320 420 480 400" stroke="#ffffff" stroke-width="2" fill="none"/>
+    <path d="M700 380 C820 360 920 400 1100 380" stroke="#ffffff" stroke-width="2" fill="none"/>
+  </g>
+</svg>

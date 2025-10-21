@@ -9,6 +9,13 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="with-bg">
+    <!-- Parallax background layers (back, mid, front) -->
+    <div class="parallax-bg" aria-hidden="true">
+        <div class="parallax-layer" data-depth="0.2"><img src="assets/bg-water-back.svg" alt=""/></div>
+        <div class="parallax-layer" data-depth="0.5"><img src="assets/bg-water-mid.svg" alt=""/></div>
+        <div class="parallax-layer" data-depth="0.9"><img src="assets/bg-water-front.svg" alt=""/></div>
+    </div>
+
     <div class="game-container">
         <div class="game-wrapper">
             <!-- Header -->
@@ -75,19 +82,39 @@
                         <div class="sound-controls">
                             <label><input type="checkbox" id="soundToggle" checked> Sound</label>
                             <label>Volume <input type="range" id="volumeControl" min="0" max="1" step="0.01" value="0.06"></label>
+                            <label title="Disable background motion if you prefer reduced motion"><input type="checkbox" id="parallaxToggle"> Parallax</label>
                         </div>
                     <button class="start-button" id="startButton">🚛 Start Water Mission</button>
-                    <p class="instructions">Use arrow keys to control your truck. Collect 💧 water drops, avoid ☠️ pollution!</p>
+                    <div style="margin-top:0.6rem; display:flex; justify-content:center; gap:0.6rem; align-items:center;">
+                        <a href="#" id="showTutorialLink" class="muted-link">Show Tutorial</a>
+                    </div>
                 </div>
 
                     <!-- Tutorial Modal -->
-                    <div class="tutorial-modal" id="tutorialModal" style="display:none;">
-                        <div class="tutorial-content">
-                            <h3>Quick Tutorial</h3>
-                            <p>You're a water delivery truck. Use the arrow keys to collect water drops (💧). Each drop adds a yellow jerry can to your trail and earns points.</p>
-                            <p>Avoid pollutants (☠️). Hitting pollution lowers your score and increases the pollutant counter.</p>
-                            <!-- Mode selection is available via the three buttons above -->
-                            <button id="closeTutorial">Got it</button>
+                    <div class="tutorial-modal" id="tutorialModal" aria-hidden="true" style="display:none;">
+                        <div class="tutorial-card" role="dialog" aria-label="Game tutorial">
+                            <header class="tutorial-header">
+                                <h3>Quick Tutorial</h3>
+                                <button id="closeTutorial" class="tutorial-close" aria-label="Close tutorial">✕</button>
+                            </header>
+                            <div class="tutorial-steps">
+                                <div class="step">
+                                    <div class="step-icon">🚛</div>
+                                    <div class="step-text"><strong>Drive</strong><div class="muted">Use the arrow keys to steer the truck.</div></div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon">💧</div>
+                                    <div class="step-text"><strong>Collect</strong><div class="muted">Pick up water drops to add jerry cans and score points.</div></div>
+                                </div>
+                                <div class="step">
+                                    <div class="step-icon">☠️</div>
+                                    <div class="step-text"><strong>Avoid</strong><div class="muted">Don't hit pollution — it reduces your score.</div></div>
+                                </div>
+                            </div>
+                            <div class="tutorial-actions">
+                                <button id="closeTutorialPrimary" class="start-button small">Got it</button>
+                                <button class="start-button small" onclick="openTutorial();" aria-label="Open tutorial again" style="display:none;">Open</button>
+                            </div>
                         </div>
                     </div>
 
